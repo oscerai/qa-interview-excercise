@@ -121,6 +121,90 @@ They should notice `ci.yml` only runs `test:unit` and propose adding `test:api` 
 | Communication | Narrates strategy before typing |
 | Release confidence | Concrete CI proposal, not vague "more tests" |
 
+---
+
+## Interview question bank
+
+Pick 8–10 questions across the session — you don't need all of them.
+
+### Must-ask (core)
+
+| # | Question | What good sounds like |
+| --- | --- | --- |
+| 4 | What would you want green before you'd sign off a release? | Names edge cases before coding |
+| 6 | Free user generates 10 notes, then tries an 11th. What should happen? Where do you test it? | 402 at API or unit boundary — not E2E |
+| 9 | Walk me through your test strategy — unit vs API vs E2E, and why? | Pyramid: one job per layer |
+| 13 | Bootstrap Playwright and write one sign-up test. | `data-testid`, `webServer`, narrates choices |
+| 19 | Open `billing.test.ts` — which test is flaky and why? | `new Date()` — fails on last day of month |
+| 21 | Open `ci.yml` — what's wrong with CI for release confidence? | Only unit runs; should add API + E2E smoke |
+
+### Opening — prep & orientation (0–5 min)
+
+1. Did prep go smoothly? Anything surprise you in the repo?
+2. In one sentence — what does NoteForge do?
+3. You have ~60 minutes and AI is fine. How do you want to spend the time?
+
+*Listen for: they ran the repo, read the spec, have a plan.*
+
+### Edge cases & problem framing (5–12 min)
+
+4. **What would you want green before you'd sign off a release of this app?**
+5. Read the business rules — **what's tested today vs what's missing?**
+6. A free user generates 10 notes, then tries an 11th. **What should happen? Where would you test that?**
+7. A user tries to generate with an **empty transcript**. What should happen to their quota?
+8. Patient name is `"   "` (spaces only). **Is that valid? How would you verify?**
+
+### Automation strategy & test pyramid (12–18 min)
+
+9. **Walk me through your test strategy** — unit vs API vs E2E, and why?
+10. Why is sign-up a good E2E candidate, but quota logic isn't?
+11. We have Supertest and Vitest. **Why add Playwright? What does it give us that API tests don't?**
+12. If you only had time for **three tests** before ship, which three and why?
+
+### Live coding — Playwright E2E (18–28 min)
+
+13. **Bootstrap Playwright** and write one test: free user signs up and sees success.
+14. Why did you pick those selectors? What would break them?
+15. How do you wire the dev server so CI can run this headless?
+
+### Live coding — API & unit tests (28–42 min)
+
+16. Write a test that proves a free user **cannot** generate an 11th note.
+17. You found a bug — **walk me through report and fix.** (Failing test first?)
+18. Missing `x-user-id` on `/sessions` — what status code? Which layer?
+19. Open `src/billing.ts` and `tests/unit/billing.test.ts`. **Which test is flaky and why?**
+20. **What test cases are missing** for those two functions?
+
+### Release gating (42–50 min)
+
+21. Open `.github/workflows/ci.yml`. **What's wrong with CI for release confidence?**
+22. What runs on **every PR**? What's **nightly**? What runs **before production**?
+23. A PR touches only sign-up CSS. **Do you still run the full API suite? Why?**
+24. E2E is slow and sometimes flaky. **How do you keep confidence without blocking every PR for 20 minutes?**
+
+### AI in QA (50–58 min)
+
+25. You used AI today (or would have). **Where did it help, and where did you not trust it?**
+26. A dev says "just have Copilot write all the tests." **What do you say?**
+27. How would you use AI to **find edge cases** without unreviewed assertions?
+28. **What would you never automate with AI** in a clinical context?
+
+### Close (58–60 min)
+
+29. If you joined tomorrow, **what's the first thing you'd add to this test suite?**
+30. Any questions for us?
+
+### Quick scoring
+
+| Strong | Weak |
+| --- | --- |
+| Names edge cases before coding | Jumps to Playwright for quota |
+| E2E = sign-up only | Can't explain pyramid |
+| Failing test → fix bug | Fixes code without a test |
+| Spots flaky date test | "All tests look fine" on billing |
+| Concrete CI proposal | "Just run more tests" |
+| AI as assistant, not autopilot | Pastes AI output unread |
+
 ## After the call
 
 Reset `main` to seed commit for next candidate.
