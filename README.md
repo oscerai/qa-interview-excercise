@@ -36,7 +36,48 @@ You should see **7 passing tests** and the sign-up page in your browser. If anyt
 - `patientName` is required (non-whitespace).
 - Generating with an empty transcript must fail and must **not** consume quota.
 
-### API
+---
+
+## Web flow (E2E)
+
+The web UI is a **single sign-up page** at `http://localhost:3000`. There is no UI for sessions or note generation.
+
+| Step | User action | What happens |
+| --- | --- | --- |
+| 1 | Open `localhost:3000` | Sign-up form loads |
+| 2 | Enter a user id | e.g. `qa-candidate` |
+| 3 | Select a plan | `free` (10 notes/month) or `pro` (unlimited) |
+| 4 | Click **Sign up** | Browser sends `POST /users` with `{ id, plan }` |
+| 5 | See success message | e.g. `Signed up as qa-candidate (free)` |
+
+On error (e.g. invalid input), an error message is shown instead.
+
+The form uses `data-testid` attributes for stable selectors: `user-id`, `plan`, `signup-submit`, `signup-success`, `error-message`.
+
+---
+
+## API flow (no UI)
+
+After sign-up, the consult-note workflow is **API-only**. A typical happy path:
+
+| Step | Request | Result |
+| --- | --- | --- |
+| 1 | `POST /users` `{ id, plan }` | User created (`201`) |
+| 2 | `POST /sessions` + header `x-user-id` + `{ patientName }` | Session created, status `draft` (`201`) |
+| 3 | `POST /sessions/:id/start` | Status → `recording` (`200`) |
+| 4 | `POST /sessions/:id/stop` + `{ transcript }` | Status → `ready` (`200`) |
+| 5 | `POST /sessions/:id/generate` + header `x-user-id` | Note returned, status → `note_generated` (`201`) |
+
+Example generate response:
+
+```json
+{
+  "note": "Consult note for Jane Doe: Patient reports a sore throat.",
+  "session": { "id": "ses_...", "status": "note_generated", ... }
+}
+```
+
+### Endpoints
 
 ```
 POST /users                  { id, plan: "free" | "pro" }
@@ -47,6 +88,8 @@ POST /sessions/:id/generate  header x-user-id
 ```
 
 In-memory store. `npm run dev` serves the web UI and API on port 3000.
+
+---
 
 ### Billing helpers (`src/billing.ts`)
 

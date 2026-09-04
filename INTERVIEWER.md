@@ -35,28 +35,32 @@ npm install && npm run verify && npm run dev
 
 ## 60-minute session script
 
-**Do not try to ask 30 questions.** Use 6 prompts + 2 live tasks. Everything else is backup if they finish early or get stuck.
+**Do not try to ask 30 questions.** Use 7 prompts + 2 live tasks. Everything else is backup if they finish early or get stuck.
 
 | Time | Phase | Do this |
 | --- | --- | --- |
 | 0–3 | Warm-up | Confirm prep worked. Quick app tour. |
-| 3–10 | **Discuss** | Q1 + Q2 (strategy, no coding yet) |
-| 10–40 | **Build** | Task 1 + Task 2 (live coding) |
-| 40–50 | **Review** | Q3 + Q4 (billing flaky test) |
-| 50–58 | **Gate + AI** | Q5 + Q6 |
+| 3–12 | **Discuss** | Q1 + Q2 + Q3 (strategy, no coding yet) |
+| 12–40 | **Build** | Task 1 + Task 2 (live coding) |
+| 40–50 | **Review** | Q4 + Q5 (billing flaky test) |
+| 50–58 | **Gate + AI** | Q6 + Q7 |
 | 58–60 | Close | "Any questions for us?" |
 
 ---
 
-## Must-ask (6 questions + 2 tasks)
+## Must-ask (7 questions + 2 tasks)
 
-### Discuss (~7 min)
+### Discuss (~10 min)
 
 **Q1.** What would you want green before you'd sign off a release of this app?
 
 *Good:* Names edge cases (quota, empty transcript, validation) before typing.
 
-**Q2.** A free user generates 10 notes, then tries an 11th — what should happen, and **which test layer** would you use?
+**Q2.** What's your **test and automation strategy** for taking this app live? How would you split unit, API, and E2E — and what would run on every PR vs nightly?
+
+*Good:* Sign-up → E2E (Playwright). Session/quota/validation → API (Supertest) or unit (Vitest). PR = fast smoke (unit + API + one E2E). Nightly = fuller regression. Mentions README web vs API flows.
+
+**Q3.** A free user generates 10 notes, then tries an 11th — what should happen, and **which test layer** would you use?
 
 *Good:* 402 at API or unit. Not E2E.
 
@@ -72,21 +76,21 @@ npm install && npm run verify && npm run dev
 
 ### Review (~10 min)
 
-**Q3.** Open `tests/unit/billing.test.ts` — which test is flaky and why?
+**Q4.** Open `tests/unit/billing.test.ts` — which test is flaky and why?
 
 *Good:* `daysRemainingInMonth()` with no date → depends on today → fails on last day of month.
 
-**Q4.** What test cases are missing for `daysRemainingInMonth` and `prorateMonthlyPrice`?
+**Q5.** What test cases are missing for `daysRemainingInMonth` and `prorateMonthlyPrice`?
 
 *Good:* Last day → 0, invalid inputs throw, mid-month proration. See answer key below.
 
 ### Gate + AI (~8 min)
 
-**Q5.** Open `.github/workflows/ci.yml` — what's wrong with CI for release confidence? What runs on PR vs nightly?
+**Q6.** Open `.github/workflows/ci.yml` — what's wrong with CI for release confidence? What runs on PR vs nightly?
 
-*Good:* Only unit today. PR should add API + E2E smoke; nightly = full regression.
+*Good:* Only unit today. PR should add API + E2E smoke; nightly = full regression. Should align with what they said in Q2.
 
-**Q6.** You used AI today (or would have) — where did it help, and where would you **not** trust it?
+**Q7.** You used AI today (or would have) — where did it help, and where would you **not** trust it?
 
 *Good:* AI for ideas/boilerplate; human owns assertions and sign-off.
 
@@ -98,7 +102,7 @@ Use if they finish early, freeze, or you need to probe deeper. **Do not schedule
 
 | If… | Ask |
 | --- | --- |
-| They skip strategy | Walk me through unit vs API vs E2E — one job each. |
+| They skip strategy | Walk me through unit vs API vs E2E for this app — see README flows. |
 | E2E done fast | Why sign-up for E2E but not quota? |
 | Stuck on Playwright | How would you wire the dev server for CI? |
 | Found a bug | Walk me through fix — failing test first? |
