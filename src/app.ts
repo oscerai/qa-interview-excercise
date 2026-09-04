@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { canGenerate, currentYearMonth } from './quota.js';
 import {
@@ -75,6 +77,9 @@ export function createApp() {
       return sendError(res, err);
     }
   });
+
+  const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
+  app.use(express.static(publicDir));
 
   return app;
 }

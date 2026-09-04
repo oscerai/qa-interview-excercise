@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NoteForge — Sign up</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 24rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        margin-bottom: 0.75rem;
+      }
+      input,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      button {
+        cursor: pointer;
+      }
+      [data-testid='error-message'] {
+        color: #b00020;
+      }
+      [data-testid='signup-success'] {
+        color: #0a6b0a;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NoteForge</h1>
+    <p>Create an account to use the consult-note API.</p>
+
+    <form data-testid="signup-form">
+      <label for="user-id">User ID</label>
+      <input id="user-id" name="userId" data-testid="user-id" required />
+
+      <label for="plan">Plan</label>
+      <select id="plan" name="plan" data-testid="plan">
+        <option value="free">Free (10 notes / month)</option>
+        <option value="pro">Pro (unlimited)</option>
+      </select>
+
+      <button type="submit" data-testid="signup-submit">Sign up</button>
+    </form>
+
+    <p data-testid="signup-success" hidden></p>
+    <p data-testid="error-message" hidden></p>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

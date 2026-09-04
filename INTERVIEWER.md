@@ -1,51 +1,126 @@
-# Interviewer guide — do not share this branch/file with the candidate
+# Interviewer guide — do not share with the candidate
 
-Private notes for the live session. Keep this on the `interviewer-guide` branch (or locally) if the candidate has repo access before the call.
+Send the candidate the repo **30 minutes before** the session. They should run `npm install && npm run verify && npm run dev` and confirm 7 tests pass.
 
-## Setup (2 min)
+---
+
+## JD → exercise mapping
+
+| JD requirement | How the exercise tests it |
+| --- | --- |
+| Live pairing, partially built codebase | Thin tests, planted bugs, incomplete CI, no Playwright |
+| Surface edge cases | Spec vs tests gap; quota, validation, flaky billing test |
+| Build verification harness | They write unit/API/E2E tests during the session |
+| Debug collaboratively | 4 planted bugs — expect failing test → fix flow |
+| AI tools encouraged | Observe prompting, verification, whether they read generated code |
+| Automation strategy / release confidence | Pyramid discussion + CI gating exercise |
+| Spin up framework from scratch | Playwright not installed — they bootstrap it |
+| Where/when tests run | `ci.yml` only runs unit — ask what they'd change |
+| AI in QA | 5-min verbal at end |
+
+---
+
+## Pre-session checklist
+
+- [ ] Candidate has repo link 30 min ahead
+- [ ] `INTERVIEWER.md` not on branch they clone (or on separate branch)
+- [ ] You can screen-share if their env fails
 
 ```bash
-git clone git@github.com:oscerai/qa-tech-exercise.git
-cd qa-tech-exercise
-npm install
-npm test          # should be green (happy path only)
-npm run dev       # optional
+npm install && npm run verify && npm run dev
+# Expect: 7 tests pass, sign-up form at :3000
 ```
 
-Share screen. Candidate drives. AI tools allowed — watch *how* they use them.
+---
 
-## Session shape (45–60 min)
+## Session run sheet (~60 min)
 
-| Time | What |
+| Time | Activity | Listen for |
+| --- | --- | --- |
+| 0–3 | Confirm prep worked. Quick tour of app. | Did they actually run it? |
+| 3–10 | "What would you want green before we ship?" | Edge cases named before coding |
+| 10–15 | Map gaps to pyramid layers | Correct layer assignment |
+| 15–25 | Bootstrap Playwright, E2E sign-up | `webServer`, `data-testid`, not brittle CSS |
+| 25–40 | API + unit tests, find planted bugs | Failing test before fix; quota at right layer |
+| 40–48 | Release gating — walk through `ci.yml` | PR = unit+API+E2E smoke; nightly = full suite |
+| 48–58 | Billing test review (`billing.test.ts`) | Flaky test + missing coverage |
+| 58–60 | AI in QA — verbal | Thoughtful boundaries, not hype |
+
+---
+
+## Test pyramid rubric
+
+| Scenario | Correct layer |
 | --- | --- |
-| 0–5 | They skim README + tests. Ask: “What would you want green before we ship this?” |
-| 5–15 | They name gaps: quota 10 vs 11, empty transcript, whitespace name, generate-from-recording, CI missing API tests. |
-| 15–40 | They write tests (and optionally fix bugs). Prefer they write a failing test *before* the fix. |
-| 40–50 | Pyramid / release: unit vs API vs E2E, what belongs on PR vs nightly. Point at `ci.yml` only running `test:unit`. |
-| 50–60 | AI: would they prompt for the missing cases, or paste the whole file? How do they review generated tests? |
+| Sign-up success message | E2E |
+| 11th note → 402 | Unit or API |
+| `canGenerate('free', 10)` | Unit |
+| Missing `x-user-id` → 401 | API |
+| Whitespace name / empty transcript | Unit (+ API for status) |
 
-You do **not** need a browser E2E here. If they reach for Playwright first, ask why that is the right layer for quota arithmetic.
+**Red flags:** all Playwright; all Supertest; can't explain layer choice; no CI opinion.
 
-## Planted bugs
+---
 
-All marked `BUG (` in `src/`.
+## Planted bugs (`BUG (` in `src/`)
 
-1. **quota-off-by-one** (`src/quota.ts`) — `generatedCount <= 10` allows an 11th free note. Spec is 10.
-2. **quota-on-failure** (`src/sessions.ts`) — `incrementUsage` runs before the empty-transcript throw. A failed generate still burns quota.
-3. **whitespace-name** (`src/sessions.ts`) — `if (!patientName)` lets `"   "` through.
-4. **skip-ready** (`src/sessions.ts`) — generate blocked only for `draft`, so `recording` can generate.
+| Bug | Location | Expected test layer |
+| --- | --- | --- |
+| quota-off-by-one | `quota.ts` | Unit at count 10 |
+| quota-on-failure | `sessions.ts` | Unit (side effect) or API (422) |
+| whitespace-name | `sessions.ts` | Unit or API 400 |
+| skip-ready | `sessions.ts` | Unit or API 409 |
 
-## Strong vs weak signal
+---
 
-**Strong:** starts from spec vs tests; picks unit for quota and API for HTTP/auth; writes a failing test for the 11th note; notices CI does not run `test:api`; talks PR smoke vs nightly; uses AI to enumerate cases then edits assertions.
+## Part 2 — flaky test answer key
 
-**Weak:** only happy-path E2E; cannot explain why unit tests exist; copies AI output without reading; never mentions release gating; “add more tests” with no layering.
+**Test:** `daysRemainingInMonth › always has at least one day left in the billing period`
 
-## If they freeze
+```typescript
+expect(daysRemainingInMonth()).toBeGreaterThan(0);
+```
 
-Prompt: “A free user generates 10 notes, then one more. What should happen?”  
-Then: “Same user, empty transcript. Quota?”
+**Why flaky:** defaults to `new Date()` — returns `0` on the last day of the month.
+
+**Missing coverage they should name:**
+- `daysRemainingInMonth`: last day → 0, first day, explicit date, leap year
+- `prorateMonthlyPrice`: mid-month, invalid inputs throw, zero price, rounding edges
+
+---
+
+## Release gating — strong answer
+
+| Gate | What runs |
+| --- | --- |
+| Every PR | Unit + API + E2E smoke (sign-up) |
+| Pre-prod / nightly | Full API regression, E2E suite |
+| Post-deploy | Synthetic smoke (optional) |
+
+They should notice `ci.yml` only runs `test:unit` and propose adding `test:api` + Playwright job.
+
+---
+
+## AI observation rubric
+
+| Strong | Weak |
+| --- | --- |
+| Prompts for edge cases, reviews output | Pastes whole files blindly |
+| Uses AI to enumerate cases, writes assertions themselves | Can't explain generated test |
+| Says where AI helps (boilerplate, coverage ideas) vs hurts (trust without verify) | "AI writes all our tests" |
+
+---
+
+## Scoring summary
+
+| Area | Strong signal |
+| --- | --- |
+| Problem-solving | Failing test → diagnose → fix planted bug |
+| Edge cases | Names quota boundary, empty transcript, flaky date test |
+| Clean code | Readable tests, stable selectors, no duplication without reason |
+| Communication | Narrates strategy before typing |
+| Release confidence | Concrete CI proposal, not vague "more tests" |
 
 ## After the call
 
-Reset `main` to the seed commit so the next candidate sees the same gaps (`git reset --hard <seed>` / force-push if this repo is interview-only).
+Reset `main` to seed commit for next candidate.
