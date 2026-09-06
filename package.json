@@ -11,7 +11,7 @@
     "verify": "vitest run && node -e \"console.log('\\n✓ Setup OK — run npm run dev and open http://localhost:3000\\n')\""
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
