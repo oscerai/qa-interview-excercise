@@ -70,6 +70,36 @@ npm install && npm run verify && npm run dev
 
 *Good:* `webServer` → `npm run dev`, `data-testid` selectors, narrates choices.
 
+**Interviewer notes — Task 1 (Playwright / framework maturity)**
+
+AI-assisted setup is **fine** — we want to see their real workflow. Using Cursor/Copilot to scaffold `playwright.config.ts` or the first spec is not a negative. What matters is whether they **understand and can explain** what was generated.
+
+After the test runs (or while they work), probe framework maturity — they do **not** need to build all of this in 60 minutes, but strong candidates should articulate it:
+
+| Topic | What to listen for |
+| --- | --- |
+| **Page Object Model** | Locators and actions live in a page class (e.g. `SignUpPage`), not raw selectors in every test. Tests read like user journeys. |
+| **Helpers / utils** | Shared setup (e.g. `signUpAsFreeUser()`) extracted from the spec. Fixtures for `page` / authenticated state. |
+| **Config** | `webServer`, `baseURL`, retries, trace/screenshot on failure, sensible timeouts — not only defaults. |
+| **Folder structure** | e.g. `tests/e2e/pages/`, `tests/e2e/specs/`, `tests/e2e/fixtures/` — separation of concerns. |
+| **Mature framework** | Stable selectors (`data-testid`), no hard-coded sleeps, CI-ready, readable reports, easy to add the next test without copy-paste. |
+
+**Follow-up prompts (pick 1–2 if they finish fast or only paste AI output):**
+
+- "If we added a second page tomorrow, how would you structure the repo?"
+- "Where would you put the sign-up flow so the next test doesn't duplicate these steps?"
+- "What would you change before handing this framework to a team of five QAs?"
+- "Page Object Model vs bare specs — when is each appropriate?"
+
+| Signal | Strong | Weak |
+| --- | --- | --- |
+| AI usage | Scaffolds with AI, then refactors and explains | Pastes config/spec verbatim, can't explain `webServer` or selectors |
+| Structure | Mentions POM, fixtures, or helpers even if not fully built | Everything in one flat `.spec.ts` with no plan to scale |
+| Selectors | `getByTestId` / role-based | Brittle CSS or XPath tied to layout |
+| Scale | Describes how framework grows (pages, utils, CI) | "One test file is enough for this app" with no forward view |
+
+*Do not fail them for not implementing POM in the session — assess whether they **know** what good looks like and would refactor toward it.*
+
 **Task 2.** Write a test that proves a free user **cannot** generate an 11th note (or any API/unit edge case from the spec).
 
 *Good:* Failing test before fix if they hit a planted bug. Correct pyramid layer.
@@ -103,7 +133,7 @@ Use if they finish early, freeze, or you need to probe deeper. **Do not schedule
 | If… | Ask |
 | --- | --- |
 | They skip strategy | Walk me through unit vs API vs E2E for this app — see README flows. |
-| E2E done fast | Why sign-up for E2E but not quota? |
+| E2E done fast | Why sign-up for E2E but not quota? / How would you structure POM if we added a dashboard? |
 | Stuck on Playwright | How would you wire the dev server for CI? |
 | Found a bug | Walk me through fix — failing test first? |
 | Empty transcript | Should quota change? Where to test? |
